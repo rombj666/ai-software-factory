@@ -7,12 +7,16 @@
     "apps/*",
     "packages/*"
   ],
+  "packageManager": "npm@10.9.8",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "22.x",
+    "npm": "10.x"
   },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:web": "npm run build -w @asf/web",
+    "build:worker": "npm run build -w @asf/worker",
+    "typecheck": "npm run typecheck -w @asf/web && npm run typecheck -w @asf/worker && npm run typecheck -w @asf/core && npm run typecheck -w @asf/db",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
