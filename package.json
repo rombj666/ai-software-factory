@@ -1,0 +1,38 @@
+{
+  "name": "ai-software-factory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Software Factory MVP - Milestone 1 foundation monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint . --max-warnings=0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "npm run db:generate -w @asf/db",
+    "db:migrate": "npm run db:migrate -w @asf/db",
+    "dev:web": "npm run dev -w @asf/web",
+    "dev:worker": "npm run dev -w @asf/worker",
+    "start:web": "npm run start -w @asf/web",
+    "start:worker": "npm run start -w @asf/worker",
+    "worker:seed:internal-job": "npm run seed:internal-job -w @asf/worker"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/node": "^22.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.30.0",
+    "@typescript-eslint/parser": "^8.30.0",
+    "eslint": "^9.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^3.1.2"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@asf/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "seed:internal-job": "tsx src/scripts/seed-internal-job.ts"
+  },
+  "dependencies": {
+    "@asf/core": "*",
+    "@asf/db": "*",
+    "postgres": "^3.4.7",
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
