@@ -16,7 +16,10 @@ export function CreateProjectForm() {
         </div>
       )}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-slate-700">
+        <label
+          htmlFor="title"
+          className="block text-sm font-medium text-slate-700"
+        >
           Project title
         </label>
         <input
@@ -30,7 +33,10 @@ export function CreateProjectForm() {
         />
       </div>
       <div>
-        <label htmlFor="idea" className="block text-sm font-medium text-slate-700">
+        <label
+          htmlFor="idea"
+          className="block text-sm font-medium text-slate-700"
+        >
           Product idea
         </label>
         <textarea
@@ -52,8 +58,8 @@ export function CreateProjectForm() {
           {pending ? "Creating..." : "Create project"}
         </button>
         <span className="text-xs text-slate-400">
-          Milestone 1 persists only the idea, title and ownership. AI
-          consultation starts in M2.
+          Your idea starts a private AI consultation. You can review every
+          requirement before continuing.
         </span>
       </div>
     </form>

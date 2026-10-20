@@ -8,13 +8,16 @@
     "build": "tsc --noEmit",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "seed:internal-job": "tsx src/scripts/seed-internal-job.ts"
+    "seed:internal-job": "tsx src/scripts/seed-internal-job.ts",
+    "test:live-consultation": "tsx src/scripts/test-live-consultation.ts"
   },
   "dependencies": {
+    "@asf/agents": "*",
     "@asf/core": "*",
     "@asf/db": "*",
     "postgres": "^3.4.7",
-    "tsx": "^4.20.0"
+    "tsx": "^4.20.0",
+    "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

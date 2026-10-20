@@ -19,10 +19,11 @@ Milestone 1 builds a **runnable foundation** for the AI Software Factory MVP:
 - Real persistence (Neon PostgreSQL via Drizzle) for the complete future workflow.
 - Real authentication (Neon Auth) — no fake users.
 - A typed, persisted workflow engine with safe job ownership and recovery.
-- Deployment-ready configuration for Railway (Web + Worker).
+- Vercel Web and Railway Worker using the existing Neon database.
 
-Everything AI-related (OpenAI, sandboxes, previews, exports) is **reserved**
-for later milestones and is never simulated as working.
+M2 adds real OpenAI consultation through the persistent Worker; see
+[M2 architecture and configuration](m2-consultation.md). Sandboxes, prototypes,
+PRDs, coding, previews and exports remain future milestones.
 
 ## 2. Package manager
 
@@ -37,7 +38,7 @@ for later milestones and is never simulated as working.
 ```text
 apps/
   web/        Next.js app: Neon Auth routes, server actions, protected dashboard,
-              project CRUD (M1 scope). Depends on @asf/core types + @asf/db schema.
+              project CRUD and consultation UI/actions. No paid AI execution.
   worker/     Node.js TS worker: safe job claiming, leases, recovery, dispatch.
               Depends on @asf/core + @asf/db.
 packages/
@@ -45,10 +46,9 @@ packages/
               createDb client (postgres-js). No business logic.
   core/       Pure TypeScript: workflow states, transitions, approval stages,
               events, job semantics (lease/backoff), unit-tested. No I/O.
-  agents/     AI Provider abstraction + OpenAI stub (NOT implemented in M1 —
-              calling throws NOT_IMPLEMENTED_M1).
-  integrations/ Sandbox provider contract (VercelSandboxProvider stub) and
-              TechnologyAdapter registry for generated apps. No runtime calls.
+  agents/     AIProvider/OpenAIProvider, Planner schema/prompt, pricing and
+              transactional consultation operations shared by Web and Worker.
+  integrations/ Reserved package for later sandbox/technology integrations.
 templates/    Reserved for M4/M5 generated application templates.
 ```
 
@@ -78,7 +78,7 @@ No custom password system exists. Missing variables fail loudly at request time.
 - Claiming uses one atomic `UPDATE … RETURNING` with
   `FOR UPDATE SKIP LOCKED`, so two workers can never process the same job.
 - Claimed jobs get `claimed_by`, `lease_expires_at`, `started_at`.
-- On startup, `recoverStaleJobs` resets expired
+- On startup and periodically, `recoverStaleJobs` resets expired
   `claimed/running` leases back to `queued` (crash recovery).
 - Failures: `failJob` increments `attempts`; while attempts remain it requeues
   with exponential backoff (`available_at`), otherwise it marks the job failed.
@@ -127,31 +127,20 @@ back its DDL and test rows. It never reads `DATABASE_URL`. No new Worker
 environment variables are required. Leave Railway offline until an operator
 chooses to deploy and resume it; pushing a fix branch does not require deployment.
 
-## 6. Railway deployment
+## 6. Deployment (Vercel Web, Railway Worker)
 
-Two Railway services, both from the same repo:
+Vercel hosts the existing Next.js Web application. Railway runs the existing
+Worker, using the root `railway.json` build/start commands and bounded restart
+policy. Neon supplies the shared PostgreSQL database and Web authentication.
 
-| Service | Root Directory | Build Command | Start Command |
-|---|---|---|---|
-| Web | `.` | `npm ci && npm run build` | `npm run start:web` |
-| Worker | `.` | `npm ci && npm run build` | `npm run start:worker` |
+Set `DATABASE_URL` on both services. Neon Auth variables belong on Web;
+`OPENAI_API_KEY` and model/pricing settings belong only on the Worker. Optional
+private Blob credentials belong on Web. No deployment settings need to be changed
+automatically for M2; see [the M2 manual setup](m2-consultation.md).
 
-`apps/web/next.config.mjs` uses `output: "standalone"`; the built standalone
-server is started via `npm run start:web` (which runs `next start`). For
-production it is recommended to set the Web service start command to
-`node apps/web/.next/standalone/apps/web/server.js` after a workspace-aware
-build, or keep `next start` for simplicity. Worker uses `tsx` to run
-`apps/worker/src/index.ts`.
-
-Environment variables to attach to **both** services:
-
-- `DATABASE_URL`
-- `NEON_AUTH_BASE_URL`
-- `NEON_AUTH_COOKIE_SECRET`
-- Worker overrides (`WORKER_ID`, `WORKER_POLL_INTERVAL_MS`, …) as needed.
-
-Keep development and production configuration separate: `.env` is local only;
-Railway variables are set in the dashboard; `.env.example` documents the keys.
+Keep local environment files ignored. Web development reads `apps/web/.env.local`;
+Worker commands require exported variables or an explicit Node `--env-file`.
+Railway deployment/resumption and merging require the user's approval.
 
 ## 7. Security rules applied in M1
 

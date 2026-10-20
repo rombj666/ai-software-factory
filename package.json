@@ -16,7 +16,7 @@
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build -w @asf/web",
     "build:worker": "npm run build -w @asf/worker",
-    "typecheck": "npm run typecheck -w @asf/web && npm run typecheck -w @asf/worker && npm run typecheck -w @asf/core && npm run typecheck -w @asf/db",
+    "typecheck": "npm run typecheck -w @asf/web && npm run typecheck -w @asf/worker && npm run typecheck -w @asf/core && npm run typecheck -w @asf/db && npm run typecheck -w @asf/agents",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,14 +26,18 @@
     "dev:worker": "npm run dev -w @asf/worker",
     "start:web": "npm run start -w @asf/web",
     "start:worker": "npm run start -w @asf/worker",
-    "worker:seed:internal-job": "npm run seed:internal-job -w @asf/worker"
+    "worker:seed:internal-job": "npm run seed:internal-job -w @asf/worker",
+    "test:live-consultation": "npm run test:live-consultation -w @asf/worker"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "^8.30.0",
     "@typescript-eslint/parser": "^8.30.0",
     "eslint": "^9.25.0",
+    "jsdom": "^30.1.3",
     "tsx": "^4.20.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.71.2",

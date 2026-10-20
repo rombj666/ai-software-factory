@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { getSessionSafe } from "@/lib/auth/server";
 import { db } from "@/lib/db";
+import { createConsultationProject } from "@asf/agents/consultation";
+import { ConsultationError } from "@asf/agents/schema";
 import { lifecycleEvents, projects } from "@asf/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 
@@ -35,24 +37,18 @@ export async function createProject(
     return { error: "Title and idea are required." };
   }
 
-  // M1 scope: only persist idea, title, ownership and initial state.
-  // AI consultation/prototyping begins in M2+.
-  const rows = await db()
-    .insert(projects)
-    .values({
-      ownerId: userId,
-      title,
-      idea,
-      status: "idea_submitted",
-    })
-    .returning({ id: projects.id });
-
-  const row = rows[0];
-  if (!row) {
-    return { error: "Project insert returned no row." };
+  let projectId: string;
+  try {
+    projectId = await createConsultationProject(db(), userId, title, idea);
+  } catch (error) {
+    return {
+      error:
+        error instanceof ConsultationError
+          ? error.message
+          : "Could not create the project. Try a different title or retry shortly.",
+    };
   }
-
-  redirect(`/dashboard/projects/${row.id}`);
+  redirect(`/dashboard/projects/${projectId}`);
 }
 
 export async function listProjectsForUser() {
