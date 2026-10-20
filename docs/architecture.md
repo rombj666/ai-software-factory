@@ -78,7 +78,7 @@ No custom password system exists. Missing variables fail loudly at request time.
 - Claiming uses one atomic `UPDATE … RETURNING` with
   `FOR UPDATE SKIP LOCKED`, so two workers can never process the same job.
 - Claimed jobs get `claimed_by`, `lease_expires_at`, `started_at`.
-- On startup (and each loop) `recoverStaleJobs` resets expired
+- On startup, `recoverStaleJobs` resets expired
   `claimed/running` leases back to `queued` (crash recovery).
 - Failures: `failJob` increments `attempts`; while attempts remain it requeues
   with exponential backoff (`available_at`), otherwise it marks the job failed.
@@ -89,6 +89,43 @@ No custom password system exists. Missing variables fail loudly at request time.
   **internal pipeline verification**, not an AI agent run.
 - Idempotency foundation: status guards prevent double processing; retries are
   explicit; future handlers should use idempotency keys on side effects.
+- Database failures log a sanitized cause chain with driver/PostgreSQL codes
+  and messages. SQL, parameters, stacks and PostgreSQL detail fields are omitted.
+  Permanent errors stop the Worker immediately with exit code 1. Transient and
+  unknown loop failures stop after five consecutive failures, waiting 5, 10, 20
+  and 40 seconds between attempts (longer poll intervals are respected up to a
+  60-second retry cap). A successful iteration resets this budget. Database
+  failures during dispatch leave the job for lease recovery instead of consuming
+  a job attempt. Railway's committed policy permits at most five process restarts;
+  check the service dashboard for overrides.
+
+### Timestamp binding regression
+
+With the locked Drizzle 0.44.7 / postgres.js 3.4.9 versions, Drizzle replaces
+postgres.js's timestamp serializers with pass-through functions. Raw `sql`
+interpolation of a JavaScript `Date` bypasses Drizzle's column encoder, leaving
+a Date in the driver's wire-protocol binding. This throws `ERR_INVALID_ARG_TYPE`
+("Received an instance of Date") before PostgreSQL executes the statement.
+Both recovery and claiming now use `sql.param(date, workflowJobs.<column>)`,
+which encodes a timestamp as an ISO string while retaining parameter binding.
+The `timestamptz` columns and `workflow_job_status` enum require no migration.
+
+The Neon schema and enum were inspected in a read-only transaction. A read-only
+`SELECT` reproduced the raw Date error and succeeded with the column encoder.
+Production queue updates were not executed for verification.
+
+Run the regular regression suite with `npm test`. To also exercise the complete
+migration, recovery/claim behavior, rollback, and fatal Worker process exit, use
+an **empty disposable local** PostgreSQL database named `asf_worker_test`:
+
+```sh
+WORKER_TEST_DATABASE_URL=postgres://user:password@127.0.0.1:5432/asf_worker_test npm test
+```
+
+The integration test rejects remote hosts and other database names, and rolls
+back its DDL and test rows. It never reads `DATABASE_URL`. No new Worker
+environment variables are required. Leave Railway offline until an operator
+chooses to deploy and resume it; pushing a fix branch does not require deployment.
 
 ## 6. Railway deployment
 
