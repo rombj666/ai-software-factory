@@ -1,6 +1,8 @@
 import type { DbClient } from "@asf/db";
 import { loadWorkerConfig } from "./config";
 import { getDb } from "./db";
+import { isDatabaseError, safeError } from "./errors";
+import { runPollingLoop } from "./polling";
 import {
   claimNextJob,
   completeJob,
@@ -44,8 +46,16 @@ async function dispatch(job: ClaimedJob): Promise<void> {
 }
 
 async function loop(): Promise<void> {
-  while (running) {
-    try {
+  const healthy = await runPollingLoop({
+    isRunning: () => running,
+    pollIntervalMs: config.pollIntervalMs,
+    sleep,
+    onError: (error, fatal, retryInMs) => {
+      console.error(`[worker:${config.workerId}] loop error`, {
+        ...safeError(error, config.databaseUrl), fatal, retryInMs,
+      });
+    },
+    tick: async () => {
       if (config.recoverStaleOnStart) {
         const recovered = await recoverStaleJobs(db);
         if (recovered > 0) {
@@ -57,15 +67,19 @@ async function loop(): Promise<void> {
       const job = await claimNextJob(db, config.workerId, config.leaseSeconds);
       if (!job) {
         await sleep(config.pollIntervalMs);
-        continue;
+        return;
       }
 
       console.log(`[worker:${config.workerId}] claimed job ${job.id} (${job.type})`);
       try {
         await dispatch(job);
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(`[worker:${config.workerId}] job ${job.id} failed: ${message}`);
+        // Infrastructure failures must reach the loop's circuit breaker, rather
+        // than consuming a job attempt or writing SQL/parameters to its error.
+        if (isDatabaseError(err)) throw err;
+        const diagnostic = safeError(err, config.databaseUrl);
+        const message = String(diagnostic.message);
+        console.error(`[worker:${config.workerId}] job ${job.id} failed`, diagnostic);
         const outcome = await failJob(db, job, message, config.maxAttempts);
         await recordLifecycleEvent(db, {
           projectId: job.projectId,
@@ -73,11 +87,13 @@ async function loop(): Promise<void> {
           payload: { jobId: job.id, type: job.type, error: message, attempts: job.attempts + 1 },
         });
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`[worker:${config.workerId}] loop error: ${message}`);
-      await sleep(Math.max(config.pollIntervalMs, 5000));
-    }
+    },
+  });
+  if (!healthy) {
+    running = false;
+    console.error(`[worker:${config.workerId}] stopped after database/loop failure; operator intervention required`);
+    await db.$client.end({ timeout: 5 });
+    process.exitCode = 1;
   }
 }
 

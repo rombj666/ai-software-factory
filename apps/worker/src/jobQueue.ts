@@ -35,12 +35,12 @@ export async function claimNextJob(
     UPDATE workflow_jobs
     SET status = 'claimed',
         claimed_by = ${workerId},
-        lease_expires_at = ${leaseExpiry},
-        started_at = ${now},
-        updated_at = ${now}
+        lease_expires_at = ${sql.param(leaseExpiry, workflowJobs.leaseExpiresAt)},
+        started_at = ${sql.param(now, workflowJobs.startedAt)},
+        updated_at = ${sql.param(now, workflowJobs.updatedAt)}
     WHERE id = (
       SELECT id FROM workflow_jobs
-      WHERE status = 'queued' AND available_at <= ${now}
+      WHERE status = 'queued' AND available_at <= ${sql.param(now, workflowJobs.availableAt)}
       ORDER BY created_at ASC
       LIMIT 1
       FOR UPDATE SKIP LOCKED
@@ -70,15 +70,17 @@ export async function claimNextJob(
 /** Reset expired claimed/running leases back to queued (crash recovery). */
 export async function recoverStaleJobs(db: DbClient): Promise<number> {
   const now = new Date();
+  // Raw sql interpolation has no column encoder. Drizzle's postgres.js adapter
+  // disables the driver's Date serializer, so bind timestamps with the column.
   const rows = (await db.execute(sql`
     UPDATE workflow_jobs
     SET status = 'queued',
         claimed_by = NULL,
         lease_expires_at = NULL,
-        available_at = ${now},
-        updated_at = ${now}
+        available_at = ${sql.param(now, workflowJobs.availableAt)},
+        updated_at = ${sql.param(now, workflowJobs.updatedAt)}
     WHERE status IN ('claimed', 'running')
-      AND (lease_expires_at IS NULL OR lease_expires_at < ${now})
+      AND (lease_expires_at IS NULL OR lease_expires_at < ${sql.param(now, workflowJobs.leaseExpiresAt)})
     RETURNING id
   `)) as unknown as Array<{ id: string }>;
   return rows.length;
