@@ -35,6 +35,7 @@ abstraction, OpenAI provider, Planner and shared consultation operations there.
 - `docs/architecture.md`
 - `docs/development-roadmap.md`
 - `docs/m2-consultation.md`
+- `docs/m2-live-test-result.json`
 - `package-lock.json`
 - `package.json`
 - `packages/agents/package.json`
@@ -85,6 +86,7 @@ were performed. Full conversation and owner-confirmed summary are the future han
 | `npm run build:worker` | Passed |
 | Chrome UI preview, 1280px and 390px widths | Rendered with no page errors or horizontal overflow |
 | `git diff --check` | Passed |
+| Real OpenAI consultation through the persistent queue | Passed: 3 successful calls, validated summary and explicit completion to `prototype_pending` |
 
 Coverage includes state transitions, response validation, persisted conversation,
 ownership, concurrent duplicate delivery, failed API calls, input and budget limits,
@@ -93,7 +95,9 @@ crashed-attempt recovery, private-route boundaries and M1 queue/exit regressions
 PostgreSQL integration tests use a real local PostgreSQL server. API behavior tests
 use mocked HTTP through the official SDK; UI and Blob/session tests use explicit
 mocks. The browser preview also uses mocked actions. None of those prove live API,
-private storage or a production authenticated browser session succeeds.
+private storage or a production authenticated browser session succeeds. A separate
+live OpenAI test has now passed; its persisted receipts were independently read back
+from the local database, as detailed below.
 
 ## 6. Required environment
 
@@ -111,7 +115,8 @@ Full settings and commands are in [the M2 guide](m2-consultation.md).
 2. Configure the real OpenAI key and model on the Railway Worker; verify pricing and
    provider-side spending limits. No database migration is needed for M2.
 3. Configure the existing Web/Neon Auth origin and, optionally, a private Blob store.
-4. Run the capped live test against a disposable local database with a real key.
+4. The capped local live test has passed. Repeat only with an explicit budget if
+   configuration or implementation changes. The ignored local key file was not committed.
 5. Deploy/resume Railway only when explicitly approved. Keep its process-restart
    policy bounded (committed maximum five retries); stop it after manual testing.
 
@@ -119,9 +124,9 @@ No automatic deployment, merge, production data modification or M3 work occurred
 
 ## 8. Known issues and verification limits
 
-- Live OpenAI verification is pending: no usable key was available in the checked
-  ignored local files. The opt-in live test is implemented and refuses to run
-  without a real key or against a non-loopback/non-test database.
+- Real OpenAI consultation passed after the key was supplied in an ignored local
+  file. The opt-in live test still refuses non-loopback/non-test databases. For
+  production, configure the key on the Railway Worker only; Web does not need it.
 - Private Blob configuration was unavailable, so a real upload/download was not
   attempted. Its code and security boundaries are tested with mocks and the UI
   reports missing configuration.
@@ -137,16 +142,37 @@ No automatic deployment, merge, production data modification or M3 work occurred
 
 ## 9. Actual live API usage and test cost
 
-**Live OpenAI requests: 0. Actual reported live tokens: 0. API test cost: $0.**
-These numbers reflect that no real API call was made; they are not a successful
-live consultation result. Mock fixture tokens/costs are not real account usage.
-The live script caps its local test project at $0.05 estimated cost and at most
-three calls, persists real receipts and confirms `prototype_pending` when successful.
+The live test completed on **2026-10-20 at 16:14 MYT** using
+`gpt-4.1-mini-2025-04-14` through the real official SDK and persistent Worker
+job handlers. It used only a disposable local PostgreSQL database and a
+**$0.05 project budget**. It did not start or deploy Railway.
+
+| Call | Input tokens | Output tokens | Cached tokens | API duration | Estimated USD |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Initial clarification | 642 | 102 | 0 | 3,870 ms | $0.000420 |
+| Follow-up clarification | 893 | 130 | 0 | 3,240 ms | $0.000566 |
+| Requirements summary | 1,046 | 326 | 0 | 2,901 ms | $0.000940 |
+| **Total** | **2,581** | **558** | **0** | **10,011 ms** | **$0.001926** |
+
+Total reported tokens: **3,139**. Costs use the configured verified standard
+rates and upward microdollar rounding per run; they are estimates, not a final
+OpenAI billing invoice. No mocked tokens are included in these totals.
+
+Read-back verification confirmed six saved messages, three succeeded jobs,
+three succeeded agent runs and three usage records. The real summary contained
+the library's target users, goals, required/optional features, authentication,
+data, UI, preferred technology, intended usage and assumptions, with no open
+questions. Explicit test-owner confirmation advanced the project to
+`prototype_pending`; all jobs remained `consultation_turn`, with no prototype
+or later milestone generated. Receipts are summarized in
+[`m2-live-test-result.json`](m2-live-test-result.json). The temporary test server
+was stopped after verification.
 
 ## 10. M3 readiness
 
 The persistence contract and reviewed-summary handoff are implemented and tested:
 `projects.current_state.consultation.summary`, completion timestamp/revision,
 conversation, job/run/usage records and lifecycle audit. M3 implementation has not
-started. Live OpenAI acceptance verification remains pending before treating M2
-as fully accepted for production. Await user approval before merging or starting M3.
+started. The real OpenAI consultation and summary handoff are now verified.
+Production deployment and a fresh authenticated browser smoke test remain manual.
+Await user approval before merging or starting M3.
