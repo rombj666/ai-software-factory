@@ -9,17 +9,19 @@ AIGC:
     ReservedCode2: 6qluFeXEbCb/KEUe8sOr3yVC+eF0zqfTylKBzkv2NnnCUEqQVRwjBxsuhVL6cld9L2HMIDebIbrvqn6nrdrEKJNyiVxTxnR5vdpUk6VyTtz5rVrQmIQqCy0zei2QteQts7d8/tBIep8FFSuFq83bEKc5JCjqU8uoJlbedof37rIo64IFHBnsqGWZi3k=
 ---
 
-# AI Software Factory — Milestones 1–2
+# AI Software Factory — Milestones 1–3
 
 Turn a product idea into a **real, tested, exportable software application**.
 
-This repository includes the M1 foundation and M2 AI Consultation Engine:
+This repository includes the M1 foundation, M2 AI Consultation Engine and M3 Prototype Engine:
 Neon PostgreSQL and Auth, the existing Next.js Web app, a persistent Worker,
 and real OpenAI product consultation with saved history, editable requirements,
-usage estimates and project budget enforcement. Prototype generation, PRDs,
-coding, QA and preview/export remain future milestones.
+usage estimates and project budget enforcement. M3 adds reviewed design plans,
+private prototype images, revisions, version approvals and a structured handoff.
+PRDs, coding, QA and preview/export remain future milestones.
 
 See [the M2 implementation and configuration guide](docs/m2-consultation.md).
+See [M3 configuration, cost controls and verification](docs/m3-prototype.md).
 ## Repository layout
 
 ```text

@@ -2,6 +2,7 @@ import type { DbClient } from "@asf/db";
 import { loadWorkerConfig } from "./config";
 import { getDb } from "./db";
 import { handleConsultationTurn } from "./consultation";
+import { handlePrototypeTask, cleanupPrototypeOrphans } from "./prototype";
 import { isDatabaseError, safeError } from "./errors";
 import { runPollingLoop } from "./polling";
 import {
@@ -33,6 +34,9 @@ let nextRecoveryAt = config.recoverStaleOnStart
 async function dispatch(job: ClaimedJob): Promise<void> {
   let result: Record<string, unknown>;
   switch (job.type) {
+    case "prototype_task":
+      await handlePrototypeTask(db, job, config.workerId, config.leaseSeconds);
+      return;
     case "consultation_turn":
       await handleConsultationTurn(
         db,
@@ -79,6 +83,7 @@ async function loop(): Promise<void> {
           );
         }
         nextRecoveryAt = Date.now() + recoveryIntervalMs;
+        if (process.env.BLOB_READ_WRITE_TOKEN) await cleanupPrototypeOrphans(db);
       }
 
       const job = await claimNextJob(db, config.workerId, config.leaseSeconds);

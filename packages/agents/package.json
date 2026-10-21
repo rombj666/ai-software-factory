@@ -11,7 +11,12 @@
     "./provider": "./src/provider.ts",
     "./pricing": "./src/pricing.ts",
     "./planner": "./src/planner.ts",
-    "./consultation": "./src/consultation.ts"
+    "./consultation": "./src/consultation.ts",
+    "./prototype-schema": "./src/prototype-schema.ts",
+    "./prototype-pricing": "./src/prototype-pricing.ts",
+    "./prototype": "./src/prototype.ts",
+    "./prototype-provider": "./src/prototype-provider.ts",
+    "./prototype-storage": "./src/prototype-storage.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -22,8 +27,10 @@
   "dependencies": {
     "@asf/core": "*",
     "@asf/db": "*",
+    "@vercel/blob": "^2.8.2",
+    "drizzle-orm": "^0.44.2",
     "openai": "^7.39.0",
-    "zod": "^4.6.7",
-    "drizzle-orm": "^0.44.2"
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-21",
+  "status": "not_run",
+  "reason": "BLOB_READ_WRITE_TOKEN is absent from the local Web and Worker configuration; private storage and retrieval prerequisites are unavailable.",
+  "requestedModel": "gpt-image-2.5-flare",
+  "actualModel": null,
+  "maximumAuthorizedTestUsd": 0.15,
+  "paidRequestsAttempted": 0,
+  "actualImageDimensions": null,
+  "actualQuality": null,
+  "providerReportedUsage": null,
+  "actualRequestEstimatedUsd": null,
+  "testApiSpendUsd": 0,
+  "privateBlobStorageVerified": false,
+  "authenticatedHttpRetrievalVerified": false,
+  "modelAccessVerified": false,
+  "productionDatabaseModified": false,
+  "notes": "Automated tests use real disposable local PostgreSQL with mocked OpenAI, Blob and sessions. No additional paid requests are authorized by this result record."
+}
