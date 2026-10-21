@@ -27,7 +27,8 @@
     "start:web": "npm run start -w @asf/web",
     "start:worker": "npm run start -w @asf/worker",
     "worker:seed:internal-job": "npm run seed:internal-job -w @asf/worker",
-    "test:live-consultation": "npm run test:live-consultation -w @asf/worker"
+    "test:live-consultation": "npm run test:live-consultation -w @asf/worker",
+    "test:live-prototype": "npm run test:live-prototype -w @asf/worker"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

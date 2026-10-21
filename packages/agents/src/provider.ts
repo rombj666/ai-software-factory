@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { plannerResponseSchema } from "./schema";
+import type { ZodType } from "zod";
 
 export interface AIRequest {
   instructions: string;
@@ -45,6 +46,7 @@ export class OpenAIProvider implements AIProvider {
     public maxOutputTokens = 2500,
     timeoutMs = 45_000,
     transport?: typeof fetch,
+    private responseSchema: ZodType = plannerResponseSchema,
   ) {
     // The persistent job queue owns retries. Never retry a paid call inside the SDK.
     this.client = new OpenAI({
@@ -61,7 +63,7 @@ export class OpenAIProvider implements AIProvider {
       input: request.messages,
       max_output_tokens: this.maxOutputTokens,
       store: false,
-      text: { format: zodTextFormat(plannerResponseSchema, "consultation") },
+      text: { format: zodTextFormat(this.responseSchema, "consultation") },
     };
   }
   inputTokenBound(request: AIRequest): number {

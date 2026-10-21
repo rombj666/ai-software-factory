@@ -2,6 +2,8 @@ import Link from "next/link";
 import { readConsultation } from "@asf/agents/consultation";
 import { db } from "@/lib/db";
 import { ConsultationWorkspace } from "@/components/consultation-workspace";
+import { PrototypeWorkspace } from "@/components/prototype-workspace";
+import { readPrototype } from "@asf/agents/prototype";
 import { storageConfigured } from "@/lib/reference-images";
 import { notFound } from "next/navigation";
 import {
@@ -23,9 +25,10 @@ export default async function ProjectDetailsPage({
 
   const events = await listProjectEventsForUser(id);
   const consultation = await readConsultation(db(), project.ownerId, id);
+  const prototype = ["prototype_pending", "prototype_approved"].includes(project.status)
+    ? await readPrototype(db(), project.ownerId, id) : null;
 
   const futureFeatures = [
-    "Prototype Engine (M3)",
     "PRD & Development Planning (M4)",
     "AI Developer & Sandbox (M5)",
     "QA & Auto Fix (M6)",
@@ -62,6 +65,8 @@ export default async function ProjectDetailsPage({
             initial={consultation}
             uploadsEnabled={storageConfigured()}
           />
+
+          {prototype && <PrototypeWorkspace initial={prototype} uploadsEnabled={storageConfigured()} />}
 
           <section className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">

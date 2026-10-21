@@ -34,7 +34,7 @@ export async function POST(
     tx: Parameters<Parameters<ReturnType<typeof db>["transaction"]>[0]>[0],
   ) {
     const project = await ownedProject(tx, id, ownerId);
-    if (!["idea_submitted", "consultation"].includes(project.status))
+    if (!["idea_submitted", "consultation", "prototype_pending"].includes(project.status))
       throw new Error("Uploads are closed.");
     const assets = await tx
       .select({ id: projectAssets.id })

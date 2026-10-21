@@ -11,7 +11,7 @@ AIGC:
 
 # Development Roadmap
 
-Complete MVP roadmap. **M1 and the M2 consultation implementation are present; M3 onward remain future work.**
+Complete MVP roadmap. **M1–M3 implementations are present; M4 onward remain future work.**
 
 ## M1 — Foundation & Infrastructure ✅ (implemented)
 
@@ -35,11 +35,13 @@ Idea submission, dynamic clarification questions, consultation history
 (`consultation_messages`), requirement collection, reference-image intake
 (`project_assets`). Planner Agent + OpenAI text integration (`packages/agents`).
 
-## M3 — Prototype Engine
+## M3 — Prototype Engine (implemented; live generation and Blob verified)
 
 OpenAI image generation, prototype revisions, image storage (private Blob),
 version tracking (`prototype_versions`), prototype review/approval
 (`approvals` type `prototype`).
+See [M3 operations and verification](m3-prototype.md), including the required
+verified input-token bound for image editing.
 
 ## M4 — PRD & Development Planning
 
