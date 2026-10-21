@@ -9,7 +9,8 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "seed:internal-job": "tsx src/scripts/seed-internal-job.ts",
-    "test:live-consultation": "tsx src/scripts/test-live-consultation.ts"
+    "test:live-consultation": "tsx src/scripts/test-live-consultation.ts",
+    "test:live-prototype": "tsx src/scripts/test-live-prototype.ts"
   },
   "dependencies": {
     "@asf/agents": "*",

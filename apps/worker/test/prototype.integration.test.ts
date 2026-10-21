@@ -178,8 +178,17 @@ describe.skipIf(!testUrl)("M3 real disposable PostgreSQL; mocked OpenAI and Blob
     expect((await readPrototype(db, owner, id)).versions).toHaveLength(0);
     expect((await readPrototype(db, owner, id)).budget.spentUsd).toBeGreaterThan(0);
     await db.update(cleanupJobs).set({ scheduledFor: new Date(Date.now() - 1000) }).where(eq(cleanupJobs.projectId, id));
-    await cleanupPrototypeOrphans(db, storage); const count = storage.remove.mock.calls.length;
-    await cleanupPrototypeOrphans(db, storage); expect(storage.remove.mock.calls.length).toBe(count);
+    const [target] = await db.select().from(cleanupJobs).where(eq(cleanupJobs.projectId, id));
+    // Reused disposable databases can contain older due cleanup records. The
+    // sweeper's ten-object batch may legitimately process those on later calls.
+    for (let batch = 0; batch < 10; batch++) {
+      await cleanupPrototypeOrphans(db, storage);
+      const [current] = await db.select().from(cleanupJobs).where(eq(cleanupJobs.id, target!.id));
+      if (current?.status === "succeeded") break;
+    }
+    const countForTarget = () => storage.remove.mock.calls.filter(call => call[0] === target!.externalId).length;
+    expect(countForTarget()).toBe(1);
+    await cleanupPrototypeOrphans(db, storage); expect(countForTarget()).toBe(1);
     expect(await db.select().from(prototypeVersions).where(eq(prototypeVersions.projectId, id))).toHaveLength(0);
   });
   it("claims distinct queued projects across independent Workers", async () => {

@@ -35,7 +35,7 @@ Idea submission, dynamic clarification questions, consultation history
 (`consultation_messages`), requirement collection, reference-image intake
 (`project_assets`). Planner Agent + OpenAI text integration (`packages/agents`).
 
-## M3 — Prototype Engine (implemented; live image verification pending)
+## M3 — Prototype Engine (implemented; live generation and Blob verified)
 
 OpenAI image generation, prototype revisions, image storage (private Blob),
 version tracking (`prototype_versions`), prototype review/approval

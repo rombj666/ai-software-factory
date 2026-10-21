@@ -203,33 +203,67 @@ before; protected/auth pages are dynamic and the build succeeds.
 
 ### Controlled live image test
 
-**Not run.** The local configuration has an OpenAI key but no
-`BLOB_READ_WRITE_TOKEN`; full private storage/retrieval prerequisites are absent.
-Model access has not been probed. No paid generation was attempted and no
-provider/image usage was fabricated. Recorded in
-[`m3-live-image-result.json`](m3-live-image-result.json).
+**Passed on 2026-10-21.** The local credentials were available for this run.
+The verifier securely loads existing local env files; credential values are
+never printed or included in receipts. An unpaid model-access preflight
+returned HTTP 200 for `gpt-image-2.5-flare` before generation.
 
-The authorized live-test ceiling is $0.15, one low-quality Flare UI image, no
-production customer data, disposable database, identifiable test Blob path and
-safe cleanup. Before attempting it, supply the missing private-store token,
-verify the conservative quoted reservation fits $0.15, use only synthetic
-requirements, and retain the first request's receipt. Do not retry access or
-verification failures, uncertain outcomes, or rerun the paid test without new
-approval. Record actual model, dimensions, quality, reported usage, estimated
-cost and both Blob retrieval and authenticated HTTP image retrieval separately.
+Exactly one low-quality image was requested using synthetic Inventory
+Management Dashboard requirements. The conservative reservation was
+**$0.064715**, below the authorized **$0.15 estimated** limit. This estimate is
+not a guaranteed provider billing cap. SDK paid retries remained disabled.
+
+| Observed result | Value |
+| --- | --- |
+| Requested/configured image model | `gpt-image-2.5-flare` |
+| Quality / actual output | `low`, PNG, 1536 × 1024 |
+| API-reported text-input tokens | 177 |
+| API-reported image-input tokens | 0 |
+| API-reported image-output tokens | 158 |
+| API-reported total tokens | 335 |
+| Estimated API cost from reported usage | **$0.005625** |
+| Normalized image size | 761,023 bytes |
+| Private Blob upload / read-back | Passed |
+| Byte equality, SHA-256, type and dimensions | Passed |
+| Delete only this run's unique test object | Passed |
+| Authenticated Blob metadata absence check after deletion | Passed |
+| Application HTTP retrieval through a real signed-in user | **Not tested** |
+
+The request specified the exact model and model access was verified. The
+Images response does not independently echo the resolved model snapshot;
+no different model was substituted. Cost is estimated from provider usage
+and verified token rates, not an invoice total or a Blob transfer/storage
+cost measurement. No customer data or production database was used.
+
+The sanitized request ID, pricing snapshot, content checksum and cleanup
+receipt are in [`m3-live-image-result.json`](m3-live-image-result.json).
+The actual image was deleted from Blob and is not committed.
+
+`apps/worker/src/scripts/test-live-prototype.ts` exposes the opt-in verifier.
+`npm run test:live-prototype -w @asf/worker -- --preflight` performs only the
+budget/model check. A paid run additionally requires
+`M3_LIVE_IMAGE_CONFIRM=one-image-max-estimate-0.15`. The script uses the existing
+M3 provider, estimator, decoder and private storage adapter. Its durable
+`temp/m3-live-image-verification/paid-attempt.json` receipt blocks another paid
+CLI invocation, including after a crash or uncertain outcome. Do not remove
+that guard or rerun a paid test without separate approval. No additional paid
+request is authorized by this successful receipt.
 
 ## Limitations and M4 readiness
 
-The code supports real provider/storage integrations, but successful live Flare
-execution, real Blob persistence and production authenticated retrieval remain
-unverified. Editing is intentionally gated on verified input-bound evidence.
+Live Flare generation, Private Blob persistence, read-back integrity and cleanup
+are verified. Application HTTP retrieval through a real authenticated user
+session remains unverified. Editing is intentionally gated on verified
+input-bound evidence and was not exercised by this generation-only test.
 There is no interactive executable prototype: images are static references.
 Image legibility and design fidelity require human review. The UI exposes
 low/medium/high quality and three common resolutions, not every model option.
 
 M4 can consume the approved structured handoff without reverse-engineering
-pixels. Handoff and approval contracts are implemented/tested; live-service
-acceptance remains pending. M4 itself has not been started.
+pixels. Handoff and approval contracts are implemented/tested. The real generation/Blob
+verification gate passed; full milestone acceptance should account for the
+documented edit-input-bound requirement and unverified signed-in HTTP flow.
+M4 itself has not been started.
 
 ## Changed files
 
@@ -245,7 +279,21 @@ acceptance remains pending. M4 itself has not been started.
 | Documentation | `README.md`, `docs/development-roadmap.md`, `docs/m3-prototype.md`, `docs/m3-live-image-result.json` |
 
 The verification run passed all five required commands. The full opted-in test
-suite passed **128 tests across 16 files, with no skips**, including the existing
-M1 Worker circuit-breaker and M2 database integration suites. No real OpenAI or
-Blob calls occurred in these tests. Temporary PostgreSQL resources were stopped
+suite passed **135 tests across 17 files, with no skips**, including the existing
+M1 Worker circuit-breaker and M2 database integration suites. The automated suite mocks OpenAI/Blob; the separately authorized live test
+above made exactly one real image request. Temporary PostgreSQL resources were stopped
 after verification.
+
+
+## Live verification follow-up files
+
+- `apps/worker/src/scripts/test-live-prototype.ts`: opt-in single-attempt verifier,
+  unpaid model preflight, conservative budget guard and exact-path cleanup.
+- `apps/worker/test/live-prototype.test.ts`: seven mocked safety tests for the
+  verifier; these do not send real paid requests.
+- `apps/worker/test/prototype.integration.test.ts`: cleanup idempotency checks
+  now count only their own test path, allowing older disposable test objects
+  to be processed in later cleanup batches.
+- Root and Worker `package.json`: `test:live-prototype` command.
+- `docs/m3-live-image-result.json`: sanitized real-run receipt.
+- This guide and `docs/development-roadmap.md`: updated verification status.
