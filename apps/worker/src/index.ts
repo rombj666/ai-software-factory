@@ -1,6 +1,7 @@
 import type { DbClient } from "@asf/db";
 import { loadWorkerConfig } from "./config";
 import { getDb } from "./db";
+import { handleConsultationTurn } from "./consultation";
 import { isDatabaseError, safeError } from "./errors";
 import { runPollingLoop } from "./polling";
 import {
@@ -24,10 +25,22 @@ const db: DbClient = getDb(config.databaseUrl);
 
 let running = true;
 let loopPromise: Promise<void> | null = null;
+const recoveryIntervalMs = Math.max(30_000, config.leaseSeconds * 500);
+let nextRecoveryAt = config.recoverStaleOnStart
+  ? 0
+  : Date.now() + recoveryIntervalMs;
 
 async function dispatch(job: ClaimedJob): Promise<void> {
   let result: Record<string, unknown>;
   switch (job.type) {
+    case "consultation_turn":
+      await handleConsultationTurn(
+        db,
+        job,
+        config.workerId,
+        config.leaseSeconds,
+      );
+      return;
     case "project_initialization":
       result = await handleProjectInitialization(db, job);
       break;
@@ -52,16 +65,20 @@ async function loop(): Promise<void> {
     sleep,
     onError: (error, fatal, retryInMs) => {
       console.error(`[worker:${config.workerId}] loop error`, {
-        ...safeError(error, config.databaseUrl), fatal, retryInMs,
+        ...safeError(error, config.databaseUrl),
+        fatal,
+        retryInMs,
       });
     },
     tick: async () => {
-      if (config.recoverStaleOnStart) {
+      if (Date.now() >= nextRecoveryAt) {
         const recovered = await recoverStaleJobs(db);
         if (recovered > 0) {
-          console.log(`[worker:${config.workerId}] recovered ${recovered} stale job(s)`);
+          console.log(
+            `[worker:${config.workerId}] recovered ${recovered} stale job(s)`,
+          );
         }
-        config.recoverStaleOnStart = false;
+        nextRecoveryAt = Date.now() + recoveryIntervalMs;
       }
 
       const job = await claimNextJob(db, config.workerId, config.leaseSeconds);
@@ -70,7 +87,9 @@ async function loop(): Promise<void> {
         return;
       }
 
-      console.log(`[worker:${config.workerId}] claimed job ${job.id} (${job.type})`);
+      console.log(
+        `[worker:${config.workerId}] claimed job ${job.id} (${job.type})`,
+      );
       try {
         await dispatch(job);
       } catch (err) {
@@ -79,19 +98,29 @@ async function loop(): Promise<void> {
         if (isDatabaseError(err)) throw err;
         const diagnostic = safeError(err, config.databaseUrl);
         const message = String(diagnostic.message);
-        console.error(`[worker:${config.workerId}] job ${job.id} failed`, diagnostic);
+        console.error(
+          `[worker:${config.workerId}] job ${job.id} failed`,
+          diagnostic,
+        );
         const outcome = await failJob(db, job, message, config.maxAttempts);
         await recordLifecycleEvent(db, {
           projectId: job.projectId,
           eventType: outcome.status === "retry" ? "job.queued" : "job.failed",
-          payload: { jobId: job.id, type: job.type, error: message, attempts: job.attempts + 1 },
+          payload: {
+            jobId: job.id,
+            type: job.type,
+            error: message,
+            attempts: job.attempts + 1,
+          },
         });
       }
     },
   });
   if (!healthy) {
     running = false;
-    console.error(`[worker:${config.workerId}] stopped after database/loop failure; operator intervention required`);
+    console.error(
+      `[worker:${config.workerId}] stopped after database/loop failure; operator intervention required`,
+    );
     await db.$client.end({ timeout: 5 });
     process.exitCode = 1;
   }
@@ -102,7 +131,9 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function shutdown(signal: string): Promise<void> {
-  console.log(`[worker:${config.workerId}] ${signal} received, shutting down...`);
+  console.log(
+    `[worker:${config.workerId}] ${signal} received, shutting down...`,
+  );
   running = false;
   if (loopPromise) {
     await Promise.race([loopPromise, sleep(5000)]);

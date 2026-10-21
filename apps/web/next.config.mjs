@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  transpilePackages: ["@asf/core", "@asf/db"],
+  transpilePackages: ["@asf/core", "@asf/db", "@asf/agents"],
   // Lint and type checks run in the monorepo root scripts (`npm run lint`,
   // `npm run typecheck`). Skip the redundant in-build phase to keep CI fast.
   eslint: {

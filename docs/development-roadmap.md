@@ -11,7 +11,7 @@ AIGC:
 
 # Development Roadmap
 
-Complete MVP roadmap. **Only M1 is implemented in this repository.**
+Complete MVP roadmap. **M1 and the M2 consultation implementation are present; M3 onward remain future work.**
 
 ## M1 — Foundation & Infrastructure ✅ (implemented)
 
@@ -29,7 +29,7 @@ Complete MVP roadmap. **Only M1 is implemented in this repository.**
   stop/failure/retry states, operational Worker.
 - `.env.example`, Railway two-service config, README + docs, real tests.
 
-## M2 — AI Consultation
+## M2 — AI Consultation (implemented; requires live service configuration)
 
 Idea submission, dynamic clarification questions, consultation history
 (`consultation_messages`), requirement collection, reference-image intake

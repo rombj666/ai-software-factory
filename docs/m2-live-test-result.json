@@ -1,0 +1,63 @@
+{
+  "verifiedAt": "2026-10-20T08:14:08.013Z",
+  "environment": "disposable local PostgreSQL; real OpenAI API",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "projectBudgetUsd": 0.05,
+  "liveRequests": 3,
+  "calls": [
+    {
+      "purpose": "initial_clarification",
+      "inputTokens": 642,
+      "outputTokens": 102,
+      "cachedInputTokens": 0,
+      "durationMs": 3870,
+      "estimatedUsd": "0.000420"
+    },
+    {
+      "purpose": "follow_up_clarification",
+      "inputTokens": 893,
+      "outputTokens": 130,
+      "cachedInputTokens": 0,
+      "durationMs": 3240,
+      "estimatedUsd": "0.000566"
+    },
+    {
+      "purpose": "requirements_summary",
+      "inputTokens": 1046,
+      "outputTokens": 326,
+      "cachedInputTokens": 0,
+      "durationMs": 2901,
+      "estimatedUsd": "0.000940"
+    }
+  ],
+  "totals": {
+    "inputTokens": 2581,
+    "outputTokens": 558,
+    "cachedInputTokens": 0,
+    "reportedTokens": 3139,
+    "durationMs": 10011,
+    "estimatedUsd": "0.001926"
+  },
+  "pricingUsdPerMillion": {
+    "input": 0.4,
+    "cachedInput": 0.1,
+    "output": 1.6
+  },
+  "costBasis": "API-reported tokens, verified configured standard text rates, rounded upward to microdollars per run; not a billing invoice",
+  "readBack": {
+    "messages": 6,
+    "succeededJobs": 3,
+    "succeededAgentRuns": 3,
+    "usageRecords": 3,
+    "summaryValidated": true,
+    "openQuestions": 0,
+    "consultationStatus": "completed",
+    "projectStatus": "prototype_pending",
+    "allJobTypes": [
+      "consultation_turn"
+    ]
+  },
+  "railwayStarted": false,
+  "productionDatabaseUsed": false,
+  "prototypeGenerated": false
+}

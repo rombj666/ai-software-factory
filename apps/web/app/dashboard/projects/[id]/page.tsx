@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { readConsultation } from "@asf/agents/consultation";
+import { db } from "@/lib/db";
+import { ConsultationWorkspace } from "@/components/consultation-workspace";
+import { storageConfigured } from "@/lib/reference-images";
 import { notFound } from "next/navigation";
 import {
   getProjectForUser,
@@ -18,9 +22,9 @@ export default async function ProjectDetailsPage({
   }
 
   const events = await listProjectEventsForUser(id);
+  const consultation = await readConsultation(db(), project.ownerId, id);
 
   const futureFeatures = [
-    "AI Consultation (M2)",
     "Prototype Engine (M3)",
     "PRD & Development Planning (M4)",
     "AI Developer & Sandbox (M5)",
@@ -49,8 +53,15 @@ export default async function ProjectDetailsPage({
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Product idea
             </h2>
-            <p className="mt-3 whitespace-pre-wrap text-slate-800">{project.idea}</p>
+            <p className="mt-3 whitespace-pre-wrap text-slate-800">
+              {project.idea}
+            </p>
           </section>
+
+          <ConsultationWorkspace
+            initial={consultation}
+            uploadsEnabled={storageConfigured()}
+          />
 
           <section className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -67,7 +78,9 @@ export default async function ProjectDetailsPage({
                     key={event.id}
                     className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm"
                   >
-                    <span className="font-mono text-slate-700">{event.eventType}</span>
+                    <span className="font-mono text-slate-700">
+                      {event.eventType}
+                    </span>
                     <span className="text-xs text-slate-400">
                       {event.createdAt.toISOString()}
                     </span>
@@ -111,7 +124,7 @@ export default async function ProjectDetailsPage({
 
           <section className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Not implemented in M1
+              Coming in later milestones
             </h2>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-500">
               {futureFeatures.map((feature) => (
