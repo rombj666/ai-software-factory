@@ -10,6 +10,7 @@ export default tseslint.config(
       "**/build/**",
       "**/out/**",
       "**/coverage/**",
+      "**/temp/**",
       "**/next-env.d.ts",
     ],
   },

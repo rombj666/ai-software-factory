@@ -49,7 +49,7 @@ export function SignInForm() {
         {pending ? "Signing in..." : "Sign in"}
       </button>
       <p className="text-center text-xs text-slate-500">
-        Managed by Neon Auth. Create accounts in the Neon Console.
+        Managed by Neon Auth.
       </p>
     </form>
   );

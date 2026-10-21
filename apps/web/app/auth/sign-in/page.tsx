@@ -28,6 +28,11 @@ export default async function SignInPage() {
             </p>
           )}
         </div>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          <Link href="/auth/sign-up" className="font-medium text-brand-700 hover:underline">
+            Create Account
+          </Link>
+        </p>
         <p className="mt-4 text-center text-xs text-slate-400">
           <Link href="/" className="hover:text-slate-600">
             Back to home

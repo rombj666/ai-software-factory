@@ -65,8 +65,9 @@ future agent, sandbox, and provider replacements local.
 - Session: `auth.getSession({ headers })` in server actions and pages.
 - Protection: `middleware.ts` redirects unauthenticated `/dashboard/*` to
   `/auth/sign-in`; every data access re-validates ownership via `ownerId`.
-- Users are provisioned in the **Neon Console** (Authentication → Users), or
-  via Neon's sign-up endpoints; M1 web UI exposes sign-in (email/password).
+- Users register at `/auth/sign-up` through the existing Neon Auth SDK's
+  `signUp.email` method. The web UI supports sign-in, sign-out, verification
+  links and verification codes; provider-issued sessions are preserved.
 - Callback configuration: set the web app URL as an allowed callback origin
   in the Neon Console so the auth handler can issue session cookies.
 
